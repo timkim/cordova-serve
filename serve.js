@@ -17,41 +17,68 @@
  under the License.
  */
 
-var chalk = require('chalk'),
-    compression = require('compression'),
-    express = require('express'),
-    server = require('./src/server');
+var server = require('connect-phonegap'),
+    chalk = require('chalk');
+
+/**
+ * Server Default Settings
+ */
+var ServeDefaults = {
+    port: 3000,
+    autoreload: true,
+    browser: true,
+    console: true,
+    deploy: true,
+    homepage: true,
+    localtunnel: false,
+    proxy: true,
+    push: true,
+    refresh: true,
+    connect: false
+};
 
 module.exports = function () {
     return new CordovaServe();
 };
 
 function CordovaServe() {
-    this.app = express();
+    // placeholder obj 
+    var options = {};
 
-    // Attach this before anything else to provide status output
-    this.app.use(function (req, res, next) {
-        res.on('finish', function () {
-            var color = this.statusCode == '404' ? chalk.red : chalk.green;
-            var msg = color(this.statusCode) + ' ' + this.req.originalUrl;
-            var encoding = this._headers && this._headers['content-encoding'];
-            if (encoding) {
-                msg += chalk.gray(' (' + encoding + ')');
-            }
-            server.log(msg);
-        });
-        next();
-    });
+    // optional parameters
+    options.port = options.port || ServeDefaults.port;
+    options.autoreload = (typeof options.autoreload === 'boolean') ? options.autoreload : ServeDefaults.autoreload;
+    options.browser = (typeof options.browser === 'boolean') ? options.browser : ServeDefaults.browser;
+    options.console = (typeof options.console === 'boolean') ? options.console : ServeDefaults.console;
+    options.deploy = (typeof options.deploy === 'boolean') ? options.deploy : ServeDefaults.deploy;
+    options.homepage = (typeof options.homepage === 'boolean') ? options.homepage : ServeDefaults.homepage;
+    options.localtunnel = (typeof options.localtunnel === 'boolean') ? options.localtunnel : ServeDefaults.localtunnel;
+    options.proxy = (typeof options.proxy === 'boolean') ? options.proxy : ServeDefaults.proxy;
+    options.push = (typeof options.push === 'boolean') ? options.push : ServeDefaults.push;
+    options.refresh = (typeof options.refresh === 'boolean') ? options.refresh : ServeDefaults.refresh;
+    options.connect = (typeof options.connect === 'boolean') ? options.connect : ServeDefaults.connect;
+    options.phonegap = this.phonegap;
+    callback = callback || function() {};
 
-    // Turn on compression
-    this.app.use(compression());
+    var _errorHandler = function(err) {
+        log('error', err);
+    };
 
-    this.servePlatform = require('./src/platform');
-    this.launchServer = server;
+    server.listen(options)
+          .on('browserAdded', function() {
+              log('browserAdded');
+          })
+          .on('deviceConnected', function() {
+              log('deviceConnected');
+          })
+          .on('error', _errorHandler)
+          .on('log', function(statusCode, url) {
+              log('log', statusCode, url);
+          })
+          .on('update', function(c) {
+              
+          })
+          .on('complete', function(data) {
+              
+          });
 }
-
-module.exports.launchBrowser = require('./src/browser');
-
-// Expose some useful express statics
-module.exports.Router = express.Router;
-module.exports.static = express.static;
