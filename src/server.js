@@ -18,7 +18,7 @@
  */
 
 var chalk = require('chalk');
-var express = require('express');
+var server = require('connect-phonegap');
 var Q = require('q');
 
 /**
@@ -26,57 +26,46 @@ var Q = require('q');
  * @param {{root: ?string, port: ?number, noLogOutput: ?bool, noServerInfo: ?bool, router: ?express.Router, events: EventEmitter}} opts
  * @returns {*|promise}
  */
-module.exports = function (opts) {
+module.exports = function (options) {
     var deferred = Q.defer();
 
-    opts = opts || {};
-    var port = opts.port || 8000;
-
     var log = module.exports.log = function (msg) {
-        if (!opts.noLogOutput) {
-            if (opts.events) {
-                opts.events.emit('log', msg);
+        if (!options.noLogOutput) {
+            if (options.events) {
+                options.events.emit('log', msg);
             } else {
                 console.log(msg);
             }
         }
     };
 
-    var app = this.app;
-    var server = require('http').Server(app);
-    this.server = server;
+    var _errorHandler = function(err) {
+        log('error', err);
+        deferred.reject(e);
+    };
 
-    if (opts.router) {
-        app.use(opts.router);
-    }
+    log('starting server');
 
-    if (opts.root) {
-        this.root = opts.root;
-        app.use(express.static(opts.root));
-    }
-
-    // If we have a project root, make that available as a static root also. This can be useful in cases where source
-    // files that have been transpiled (such as TypeScript) are located under the project root on a path that mirrors
-    // the the transpiled file's path under the platform root and is pointed to by a map file.
-    if (this.projectRoot) {
-        app.use(express.static(this.projectRoot));
-    }
-
-    var that = this;
-    server.listen(port).on('listening', function () {
-        that.port = port;
-        if (!opts.noServerInfo) {
-            log('Static file server running on: ' + chalk.green('http://localhost:' + port) + ' (CTRL + C to shut down)');
-        }
-        deferred.resolve();
-    }).on('error', function (e) {
-        if (e && e.toString().indexOf('EADDRINUSE') !== -1) {
-            port++;
-            server.listen(port);
-        } else {
-            deferred.reject(e);
-        }
-    });
+    server.listen(options)
+        .on('listening', function() {
+            deferred.resolve();
+        })
+        .on('browserAdded', function() {
+          log('browserAdded');
+        })
+        .on('deviceConnected', function() {
+          log('deviceConnected');
+        })
+        .on('error', _errorHandler)
+        .on('log', function(statusCode, url) {
+          log('log', statusCode, url);
+        })
+        .on('update', function(c) {
+          
+        })
+        .on('complete', function(data) {
+          
+        });
 
     return deferred.promise;
 };

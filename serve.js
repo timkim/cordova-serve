@@ -17,7 +17,7 @@
  under the License.
  */
 
-var server = require('connect-phonegap'),
+var server = require('./src/server'),
     chalk = require('chalk');
 
 /**
@@ -42,7 +42,7 @@ module.exports = function () {
 };
 
 function CordovaServe() {
-    // placeholder obj 
+    //place holder 
     var options = {};
 
     // optional parameters
@@ -60,25 +60,5 @@ function CordovaServe() {
     options.phonegap = this.phonegap;
     callback = callback || function() {};
 
-    var _errorHandler = function(err) {
-        log('error', err);
-    };
-
-    server.listen(options)
-          .on('browserAdded', function() {
-              log('browserAdded');
-          })
-          .on('deviceConnected', function() {
-              log('deviceConnected');
-          })
-          .on('error', _errorHandler)
-          .on('log', function(statusCode, url) {
-              log('log', statusCode, url);
-          })
-          .on('update', function(c) {
-              
-          })
-          .on('complete', function(data) {
-              
-          });
+    this.launchServer = server(options);
 }
